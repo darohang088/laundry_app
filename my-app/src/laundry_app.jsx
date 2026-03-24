@@ -7,9 +7,9 @@ const STATUS_FLOW = {
   PICKUP_ASSIGNED: { label: "Pickup Assigned", color: "#6366f1", bg: "#ede9fe", step: 3 },
   OUT_FOR_PICKUP: { label: "Out for Pickup", color: "#8b5cf6", bg: "#ede9fe", step: 4 },
   PICKED_UP: { label: "Picked Up", color: "#0ea5e9", bg: "#e0f2fe", step: 5 },
-  DELIVERED_TO_SHOP: { label: "Delivered to Shop", color: "#0284c7", bg: "#e0f2fe", step: 6 },
+  DELIVERED_TO_SHOP: { label: "At Shop", color: "#0284c7", bg: "#e0f2fe", step: 6 },
   WASHING: { label: "Washing", color: "#06b6d4", bg: "#cffafe", step: 7 },
-  READY_FOR_DELIVERY: { label: "Ready for Delivery", color: "#10b981", bg: "#d1fae5", step: 8 },
+  READY_FOR_DELIVERY: { label: "Ready", color: "#10b981", bg: "#d1fae5", step: 8 },
   DELIVERY_ASSIGNED: { label: "Delivery Assigned", color: "#6366f1", bg: "#ede9fe", step: 9 },
   OUT_FOR_DELIVERY: { label: "Out for Delivery", color: "#8b5cf6", bg: "#ede9fe", step: 10 },
   DELIVERED: { label: "Delivered", color: "#16a34a", bg: "#dcfce7", step: 11 },
@@ -30,14 +30,9 @@ const STEPS = [
 ];
 
 let orderIdCounter = 1001;
-
-function generateId() {
-  return `ORD-${orderIdCounter++}`;
-}
+function generateId() { return `ORD-${orderIdCounter++}`; }
 
 const CLOTHES_TYPES = ["Shirts", "Pants", "Dresses", "Jackets", "Bedsheets", "Towels", "Uniforms", "Mixed"];
-const SAMPLE_CUSTOMERS = ["Daro Sok", "Srey Lin", "Bopha Chan", "Virak Pich"];
-const SAMPLE_ADDRESSES = ["Street 271, BKK1", "Street 63, Chamkarmon", "Street 178, Daun Penh", "Toul Kork, PP"];
 
 export default function LaundryApp() {
   const [role, setRole] = useState("customer");
@@ -76,7 +71,7 @@ export default function LaundryApp() {
     if (!newOrder.address.trim()) { showToast("Please enter your address", "error"); return; }
     const order = {
       id: generateId(),
-      customer: SAMPLE_CUSTOMERS[0],
+      customer: "Daro Sok",
       address: newOrder.address,
       clothesType: newOrder.clothesType,
       quantity: newOrder.quantity,
@@ -88,8 +83,8 @@ export default function LaundryApp() {
     };
     setOrders(prev => [order, ...prev]);
     addNotif(["shop"], `New order ${order.id} from ${order.customer}`, order.id);
-    addNotif(["customer"], `Order ${order.id} created successfully — awaiting confirmation`, order.id);
-    showToast(`Order ${order.id} placed successfully!`);
+    addNotif(["customer"], `Order ${order.id} created — awaiting confirmation`, order.id);
+    showToast(`Order ${order.id} placed!`);
     setShowCreateModal(false);
     setNewOrder({ clothesType: "Shirts", quantity: 1, address: "", notes: "" });
   };
@@ -97,96 +92,85 @@ export default function LaundryApp() {
   const shopAction = (orderId, action) => {
     if (action === "accept") {
       updateOrderStatus(orderId, "ACCEPTED");
-      addNotif(["customer"], `Your order ${orderId} has been ACCEPTED by the laundry shop`, orderId);
-      addNotif(["shop"], `Order ${orderId} marked as ACCEPTED`, orderId);
+      addNotif(["customer"], `Your order ${orderId} has been ACCEPTED`, orderId);
       showToast("Order accepted!");
     } else {
       updateOrderStatus(orderId, "REJECTED");
-      addNotif(["customer"], `Your order ${orderId} was REJECTED by the laundry shop`, orderId);
+      addNotif(["customer"], `Your order ${orderId} was REJECTED`, orderId);
       showToast("Order rejected", "error");
     }
   };
 
   const assignPickupDriver = (orderId) => {
-    const driver = "Dara Meas";
-    updateOrderStatus(orderId, "PICKUP_ASSIGNED", { driver });
-    addNotif(["driver"], `You have been assigned for PICKUP of order ${orderId}`, orderId);
-    addNotif(["shop"], `Driver ${driver} assigned for pickup of ${orderId}`, orderId);
-    showToast(`Driver assigned for pickup!`);
+    updateOrderStatus(orderId, "PICKUP_ASSIGNED", { driver: "Dara Meas" });
+    addNotif(["driver"], `Assigned for PICKUP of ${orderId}`, orderId);
+    showToast("Driver assigned for pickup!");
   };
 
   const driverPickupAction = (orderId, action) => {
     if (action === "accept") {
       updateOrderStatus(orderId, "OUT_FOR_PICKUP");
-      addNotif(["customer"], `Driver is heading to pick up your order ${orderId}`, orderId);
-      addNotif(["shop"], `Driver accepted pickup for order ${orderId}`, orderId);
-      showToast("Pickup accepted — heading out!");
+      addNotif(["customer"], `Driver heading to pick up ${orderId}`, orderId);
+      showToast("Heading out for pickup!");
     } else {
       updateOrderStatus(orderId, "ACCEPTED", { driver: null });
-      addNotif(["shop"], `Driver rejected pickup for order ${orderId}. Please reassign.`, orderId);
+      addNotif(["shop"], `Driver rejected pickup for ${orderId}. Reassign.`, orderId);
       showToast("Pickup rejected", "error");
     }
   };
 
   const driverPickedUp = (orderId) => {
     updateOrderStatus(orderId, "PICKED_UP");
-    addNotif(["customer"], `Your clothes have been picked up for order ${orderId}`, orderId);
-    addNotif(["shop"], `Order ${orderId} clothes picked up — en route to shop`, orderId);
+    addNotif(["customer"], `Clothes picked up for ${orderId}`, orderId);
     showToast("Marked as picked up!");
   };
 
   const driverDeliveredToShop = (orderId) => {
     updateOrderStatus(orderId, "DELIVERED_TO_SHOP");
-    addNotif(["shop"], `Order ${orderId} delivered to shop. Start washing!`, orderId);
+    addNotif(["shop"], `Order ${orderId} delivered to shop!`, orderId);
     showToast("Delivered to shop!");
   };
 
   const shopStartWashing = (orderId) => {
     updateOrderStatus(orderId, "WASHING");
-    addNotif(["customer"], `Your laundry for order ${orderId} is now being washed`, orderId);
+    addNotif(["customer"], `Laundry for ${orderId} is being washed`, orderId);
     showToast("Washing started!");
   };
 
   const shopReadyForDelivery = (orderId) => {
     updateOrderStatus(orderId, "READY_FOR_DELIVERY");
-    addNotif(["customer"], `Your laundry order ${orderId} is ready for delivery!`, orderId);
-    addNotif(["shop"], `Order ${orderId} ready — assign delivery driver`, orderId);
-    showToast("Order ready for delivery!");
+    addNotif(["customer"], `Order ${orderId} is ready for delivery!`, orderId);
+    showToast("Ready for delivery!");
   };
 
   const assignDeliveryDriver = (orderId) => {
-    const driver = "Dara Meas";
-    updateOrderStatus(orderId, "DELIVERY_ASSIGNED", { driver });
-    addNotif(["driver"], `You have been assigned for DELIVERY of order ${orderId}`, orderId);
-    addNotif(["shop"], `Driver assigned for delivery of ${orderId}`, orderId);
+    updateOrderStatus(orderId, "DELIVERY_ASSIGNED", { driver: "Dara Meas" });
+    addNotif(["driver"], `Assigned for DELIVERY of ${orderId}`, orderId);
     showToast("Delivery driver assigned!");
   };
 
   const driverDeliveryAction = (orderId, action) => {
     if (action === "accept") {
       updateOrderStatus(orderId, "OUT_FOR_DELIVERY");
-      addNotif(["customer"], `Driver is on the way to deliver your order ${orderId}`, orderId);
-      addNotif(["shop"], `Driver accepted delivery for order ${orderId}`, orderId);
-      showToast("Delivery accepted — heading out!");
+      addNotif(["customer"], `Driver on the way to deliver ${orderId}`, orderId);
+      showToast("Heading out for delivery!");
     } else {
       updateOrderStatus(orderId, "READY_FOR_DELIVERY", { driver: null });
-      addNotif(["shop"], `Driver rejected delivery for order ${orderId}. Please reassign.`, orderId);
+      addNotif(["shop"], `Driver rejected delivery for ${orderId}. Reassign.`, orderId);
       showToast("Delivery rejected", "error");
     }
   };
 
   const driverArrivedAtCustomer = (orderId) => {
     updateOrderStatus(orderId, "OUT_FOR_DELIVERY");
-    addNotif(["customer"], `Driver has arrived at your location for order ${orderId}!`, orderId);
-    addNotif(["shop"], `Driver arrived at customer location for order ${orderId}`, orderId);
+    addNotif(["customer"], `Driver arrived at your location for ${orderId}!`, orderId);
     showToast("Arrived at customer!");
   };
 
   const driverDelivered = (orderId) => {
     updateOrderStatus(orderId, "DELIVERED");
-    addNotif(["customer"], `Order ${orderId} successfully delivered. Thank you!`, orderId);
-    addNotif(["shop"], `Order ${orderId} has been DELIVERED. Payment collected.`, orderId);
-    showToast("Order delivered successfully! 🎉");
+    addNotif(["customer"], `Order ${orderId} delivered. Thank you!`, orderId);
+    showToast("Order delivered! 🎉");
   };
 
   const currentNotifs = notifications[role] || [];
@@ -203,6 +187,8 @@ export default function LaundryApp() {
     return orders;
   };
 
+  const handlers = { shopAction, assignPickupDriver, driverPickupAction, driverPickedUp, driverDeliveredToShop, shopStartWashing, shopReadyForDelivery, assignDeliveryDriver, driverDeliveryAction, driverArrivedAtCustomer, driverDelivered };
+
   useEffect(() => {
     const handleClick = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotif(false);
@@ -211,62 +197,59 @@ export default function LaundryApp() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Phone shell wrapper
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#f0f4f8", minHeight: "100vh", color: "#1e293b" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#e2e8f0", padding: 20, fontFamily: "'DM Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet" />
 
-      {/* Header */}
-      <header style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 18 }}>👕</span>
-            </div>
-            <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 20, color: "#0f172a" }}>FreshFold</span>
-            <span style={{ fontSize: 11, background: "#e0f2fe", color: "#0284c7", padding: "2px 8px", borderRadius: 20, fontWeight: 600 }}>Laundry System</span>
-          </div>
+      {/* Phone shell */}
+      <div style={{ width: 390, height: 844, background: "#f0f4f8", borderRadius: 44, boxShadow: "0 40px 80px rgba(0,0,0,0.25), 0 0 0 10px #1e293b, inset 0 0 0 2px #334155", overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
 
-          {/* Role Switcher */}
-          <div style={{ display: "flex", background: "#f1f5f9", borderRadius: 12, padding: 4, gap: 2 }}>
-            {[
-              { id: "customer", icon: "👤", label: "Customer" },
-              { id: "shop", icon: "🏪", label: "Laundry Shop" },
-              { id: "driver", icon: "🚗", label: "Driver" },
-            ].map(r => (
-              <button key={r.id} onClick={() => { setRole(r.id); setSelectedOrder(null); }}
-                style={{ padding: "6px 14px", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s",
-                  background: role === r.id ? "#fff" : "transparent",
-                  color: role === r.id ? "#0f172a" : "#64748b",
-                  boxShadow: role === r.id ? "0 1px 4px rgba(0,0,0,0.1)" : "none"
-                }}>
-                {r.icon} {r.label}
-              </button>
-            ))}
+        {/* Status bar */}
+        <div style={{ background: "#fff", padding: "12px 24px 8px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>9:41</span>
+          <div style={{ width: 120, height: 26, background: "#0f172a", borderRadius: 20, flexShrink: 0 }} />
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+            <span style={{ fontSize: 11 }}>●●●</span>
+            <span style={{ fontSize: 11 }}>📶</span>
+            <span style={{ fontSize: 11 }}>🔋</span>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 30, height: 30, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>👕</div>
+            <div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 16, color: "#0f172a", lineHeight: 1 }}>FreshFold</div>
+              <div style={{ fontSize: 9, color: "#64748b", fontWeight: 500 }}>Laundry System</div>
+            </div>
           </div>
 
           {/* Notification Bell */}
           <div ref={notifRef} style={{ position: "relative" }}>
             <button onClick={() => { setShowNotif(!showNotif); markRead(); }}
-              style={{ background: showNotif ? "#e0f2fe" : "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, width: 40, height: 40, cursor: "pointer", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+              style={{ background: showNotif ? "#e0f2fe" : "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, width: 36, height: 36, cursor: "pointer", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
               🔔
               {unreadCount > 0 && (
-                <span style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                <span style={{ position: "absolute", top: -3, right: -3, background: "#ef4444", color: "#fff", borderRadius: 20, fontSize: 9, fontWeight: 700, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                   {unreadCount}
                 </span>
               )}
             </button>
+
             {showNotif && (
-              <div style={{ position: "absolute", right: 0, top: 48, width: 340, background: "#fff", borderRadius: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", border: "1px solid #e2e8f0", overflow: "hidden", zIndex: 200 }}>
-                <div style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Notifications</div>
+              <div style={{ position: "absolute", right: 0, top: 42, width: 300, background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.15)", border: "1px solid #e2e8f0", overflow: "hidden", zIndex: 200 }}>
+                <div style={{ padding: "12px 14px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: 13, color: "#0f172a" }}>Notifications</div>
                 {currentNotifs.length === 0 ? (
-                  <div style={{ padding: 24, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No notifications yet</div>
+                  <div style={{ padding: 20, textAlign: "center", color: "#94a3b8", fontSize: 12 }}>No notifications yet</div>
                 ) : (
-                  <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                  <div style={{ maxHeight: 260, overflowY: "auto" }}>
                     {currentNotifs.map(n => (
                       <div key={n.id} onClick={() => { const o = orders.find(o => o.id === n.orderId); if (o) setSelectedOrder(o); setShowNotif(false); }}
-                        style={{ padding: "12px 16px", borderBottom: "1px solid #f8fafc", cursor: "pointer", background: n.read ? "#fff" : "#f0f9ff", transition: "background 0.15s" }}>
-                        <div style={{ fontSize: 13, color: "#334155", fontWeight: n.read ? 400 : 600 }}>{n.msg}</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{n.time}</div>
+                        style={{ padding: "10px 14px", borderBottom: "1px solid #f8fafc", cursor: "pointer", background: n.read ? "#fff" : "#f0f9ff" }}>
+                        <div style={{ fontSize: 12, color: "#334155", fontWeight: n.read ? 400 : 600 }}>{n.msg}</div>
+                        <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>{n.time}</div>
                       </div>
                     ))}
                   </div>
@@ -275,27 +258,46 @@ export default function LaundryApp() {
             )}
           </div>
         </div>
-      </header>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px", display: "grid", gridTemplateColumns: selectedOrder ? "1fr 420px" : "1fr", gap: 20 }}>
+        {/* Role Switcher */}
+        <div style={{ background: "#fff", padding: "8px 12px", borderBottom: "1px solid #e2e8f0", flexShrink: 0 }}>
+          <div style={{ display: "flex", background: "#f1f5f9", borderRadius: 10, padding: 3, gap: 2 }}>
+            {[
+              { id: "customer", icon: "👤", label: "Customer" },
+              { id: "shop", icon: "🏪", label: "Shop" },
+              { id: "driver", icon: "🚗", label: "Driver" },
+            ].map(r => (
+              <button key={r.id} onClick={() => { setRole(r.id); setSelectedOrder(null); }}
+                style={{ flex: 1, padding: "7px 4px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s",
+                  background: role === r.id ? "#fff" : "transparent",
+                  color: role === r.id ? "#0f172a" : "#64748b",
+                  boxShadow: role === r.id ? "0 1px 4px rgba(0,0,0,0.1)" : "none"
+                }}>
+                <div>{r.icon}</div>
+                <div>{r.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* Left Panel */}
-        <div>
+        {/* Scrollable Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px 12px 20px" }}>
+
           {/* Top bar */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div>
-              <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 700, margin: 0, color: "#0f172a" }}>
+              <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, margin: 0, color: "#0f172a" }}>
                 {role === "customer" && "My Orders"}
                 {role === "shop" && "Shop Dashboard"}
-                {role === "driver" && "Driver Dashboard"}
+                {role === "driver" && "My Jobs"}
               </h1>
-              <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+              <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748b" }}>
                 {getOrdersForRole().length} order{getOrdersForRole().length !== 1 ? "s" : ""}
               </p>
             </div>
             {role === "customer" && (
               <button onClick={() => setShowCreateModal(true)}
-                style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans', sans-serif", boxShadow: "0 4px 12px rgba(14,165,233,0.3)" }}>
+                style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: "0 4px 10px rgba(14,165,233,0.3)" }}>
                 + New Order
               </button>
             )}
@@ -303,30 +305,30 @@ export default function LaundryApp() {
 
           {/* Stats row for shop */}
           {role === "shop" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
               {[
                 { label: "Pending", status: "PENDING", icon: "⏳", color: "#f59e0b", bg: "#fef9ee" },
                 { label: "Washing", status: "WASHING", icon: "🫧", color: "#06b6d4", bg: "#f0fdfe" },
                 { label: "Ready", status: "READY_FOR_DELIVERY", icon: "✅", color: "#10b981", bg: "#f0fdf4" },
-                { label: "Delivered", status: "DELIVERED", icon: "📦", color: "#6366f1", bg: "#f5f3ff" },
+                { label: "Done", status: "DELIVERED", icon: "📦", color: "#6366f1", bg: "#f5f3ff" },
               ].map(stat => (
-                <div key={stat.status} style={{ background: stat.bg, borderRadius: 12, padding: "14px 16px", border: `1px solid ${stat.color}22` }}>
-                  <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: stat.color }}>{orders.filter(o => o.status === stat.status).length}</div>
-                  <div style={{ fontSize: 12, color: "#64748b", fontWeight: 500 }}>{stat.label}</div>
+                <div key={stat.status} style={{ background: stat.bg, borderRadius: 10, padding: "10px 8px", border: `1px solid ${stat.color}22`, textAlign: "center" }}>
+                  <div style={{ fontSize: 16 }}>{stat.icon}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: stat.color }}>{orders.filter(o => o.status === stat.status).length}</div>
+                  <div style={{ fontSize: 9, color: "#64748b", fontWeight: 500 }}>{stat.label}</div>
                 </div>
               ))}
             </div>
           )}
 
           {/* Orders list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {getOrdersForRole().length === 0 ? (
-              <div style={{ background: "#fff", borderRadius: 16, padding: 48, textAlign: "center", border: "1px solid #e2e8f0" }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>👕</div>
-                <div style={{ fontWeight: 600, color: "#334155", fontSize: 16 }}>No orders yet</div>
-                <div style={{ color: "#94a3b8", fontSize: 13, marginTop: 4 }}>
-                  {role === "customer" ? "Create your first laundry order!" : "Orders will appear here"}
+              <div style={{ background: "#fff", borderRadius: 14, padding: 36, textAlign: "center", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>👕</div>
+                <div style={{ fontWeight: 600, color: "#334155", fontSize: 14 }}>No orders yet</div>
+                <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 3 }}>
+                  {role === "customer" ? "Create your first order!" : "Orders will appear here"}
                 </div>
               </div>
             ) : (
@@ -334,42 +336,112 @@ export default function LaundryApp() {
                 const st = STATUS_FLOW[order.status] || {};
                 const isSelected = selectedOrder?.id === order.id;
                 return (
-                  <div key={order.id} onClick={() => setSelectedOrder(isSelected ? null : order)}
-                    style={{ background: "#fff", borderRadius: 16, padding: 16, border: isSelected ? "2px solid #0ea5e9" : "1px solid #e2e8f0", cursor: "pointer", transition: "all 0.2s", boxShadow: isSelected ? "0 4px 20px rgba(14,165,233,0.12)" : "0 1px 4px rgba(0,0,0,0.04)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                          <span style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>{order.id}</span>
-                          <span style={{ background: st.bg, color: st.color, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{st.label}</span>
+                  <div key={order.id}>
+                    <div onClick={() => setSelectedOrder(isSelected ? null : order)}
+                      style={{ background: "#fff", borderRadius: 14, padding: 14, border: isSelected ? "2px solid #0ea5e9" : "1px solid #e2e8f0", cursor: "pointer", transition: "all 0.2s", boxShadow: isSelected ? "0 4px 16px rgba(14,165,233,0.12)" : "0 1px 4px rgba(0,0,0,0.04)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                            <span style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>{order.id}</span>
+                            <span style={{ background: st.bg, color: st.color, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{st.label}</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: "#64748b" }}>
+                            🧺 {order.clothesType} · ×{order.quantity} · 📍 {order.address}
+                          </div>
+                          {order.driver && (
+                            <div style={{ fontSize: 11, color: "#6366f1", marginTop: 3, fontWeight: 500 }}>🚗 {order.driver}</div>
+                          )}
                         </div>
-                        <div style={{ fontSize: 13, color: "#64748b" }}>
-                          <span>🧺 {order.clothesType}</span>
-                          <span style={{ margin: "0 8px" }}>•</span>
-                          <span>×{order.quantity} pcs</span>
-                          <span style={{ margin: "0 8px" }}>•</span>
-                          <span>📍 {order.address}</span>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 10, color: "#94a3b8" }}>{order.createdAt}</div>
                         </div>
-                        {order.driver && (
-                          <div style={{ fontSize: 12, color: "#6366f1", marginTop: 4, fontWeight: 500 }}>🚗 Driver: {order.driver}</div>
-                        )}
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 11, color: "#94a3b8" }}>{order.createdAt}</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{order.customer}</div>
+
+                      {/* Progress bar */}
+                      <div style={{ height: 3, background: "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
+                        <div style={{ height: "100%", background: "linear-gradient(90deg, #0ea5e9, #6366f1)", borderRadius: 4, width: `${((st.step || 1) / 11) * 100}%`, transition: "width 0.5s ease" }} />
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div onClick={e => e.stopPropagation()} style={{ marginTop: 10 }}>
+                        <ActionButtons order={order} role={role} handlers={handlers} />
                       </div>
                     </div>
 
-                    {/* Progress bar */}
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ height: 4, background: "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
-                        <div style={{ height: "100%", background: `linear-gradient(90deg, #0ea5e9, #6366f1)`, borderRadius: 4, width: `${((st.step || 1) / 11) * 100}%`, transition: "width 0.5s ease" }} />
-                      </div>
-                    </div>
+                    {/* Inline detail panel when selected */}
+                    {isSelected && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden", marginTop: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                        <div style={{ padding: "12px 14px", borderBottom: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f0f9ff, #f5f3ff)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>Order Details</div>
+                          <button onClick={() => setSelectedOrder(null)} style={{ background: "#f1f5f9", border: "none", borderRadius: 6, width: 24, height: 24, cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                        </div>
 
-                    {/* Quick Actions */}
-                    <div onClick={e => e.stopPropagation()} style={{ marginTop: 12 }}>
-                      <ActionButtons order={order} role={role} handlers={{ shopAction, assignPickupDriver, driverPickupAction, driverPickedUp, driverDeliveredToShop, shopStartWashing, shopReadyForDelivery, assignDeliveryDriver, driverDeliveryAction, driverArrivedAtCustomer, driverDelivered }} />
-                    </div>
+                        <div style={{ padding: 14 }}>
+                          {/* Info grid */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                            {[
+                              { label: "Customer", value: selectedOrder.customer },
+                              { label: "Clothes", value: `${selectedOrder.clothesType} ×${selectedOrder.quantity}` },
+                              { label: "Address", value: selectedOrder.address },
+                              { label: "Driver", value: selectedOrder.driver || "Not assigned" },
+                            ].map(item => (
+                              <div key={item.label} style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 10px" }}>
+                                <div style={{ fontSize: 9, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>{item.label}</div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#334155", marginTop: 1 }}>{item.value}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {selectedOrder.notes && (
+                            <div style={{ background: "#fef9c3", borderRadius: 8, padding: "8px 10px", marginBottom: 12 }}>
+                              <div style={{ fontSize: 9, color: "#854d0e", fontWeight: 600 }}>NOTES</div>
+                              <div style={{ fontSize: 11, color: "#713f12" }}>{selectedOrder.notes}</div>
+                            </div>
+                          )}
+
+                          {/* Timeline */}
+                          <div style={{ marginBottom: 14 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>Timeline</div>
+                            {selectedOrder.history.map((h, i) => {
+                              const st = STATUS_FLOW[h.status] || {};
+                              const isLast = i === selectedOrder.history.length - 1;
+                              return (
+                                <div key={i} style={{ display: "flex", gap: 10, marginBottom: isLast ? 0 : 12, position: "relative" }}>
+                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLast ? st.color || "#0ea5e9" : "#cbd5e1", flexShrink: 0, marginTop: 3 }} />
+                                    {!isLast && <div style={{ width: 2, flex: 1, background: "#e2e8f0", marginTop: 2 }} />}
+                                  </div>
+                                  <div style={{ paddingBottom: isLast ? 0 : 4 }}>
+                                    <div style={{ fontSize: 12, fontWeight: isLast ? 700 : 500, color: isLast ? st.color || "#0f172a" : "#475569" }}>{st.label || h.status}</div>
+                                    <div style={{ fontSize: 10, color: "#94a3b8" }}>{h.time}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Progress steps */}
+                          <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 12 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>Progress</div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              {STEPS.slice(0, 7).map((step, i) => {
+                                const curStep = STATUS_FLOW[selectedOrder.status]?.step || 1;
+                                const done = curStep > i + 1;
+                                const active = curStep === i + 1;
+                                return (
+                                  <div key={step.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <div style={{ width: 16, height: 16, borderRadius: "50%", background: done ? "#10b981" : active ? "#0ea5e9" : "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                      {done ? <span style={{ color: "#fff", fontSize: 8 }}>✓</span> : <span style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "#fff" : "#cbd5e1", display: "block" }} />}
+                                    </div>
+                                    <span style={{ fontSize: 11, color: done ? "#10b981" : active ? "#0ea5e9" : "#94a3b8", fontWeight: active ? 700 : 500 }}>{step.label}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -377,139 +449,63 @@ export default function LaundryApp() {
           </div>
         </div>
 
-        {/* Right Panel - Order Detail */}
-        {selectedOrder && (
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", overflow: "hidden", alignSelf: "flex-start", position: "sticky", top: 80, boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, #f0f9ff, #f5f3ff)" }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 16, color: "#0f172a" }}>{selectedOrder.id}</div>
-                <div style={{ fontSize: 12, color: "#64748b" }}>Order Details</div>
+        {/* Create Order Modal - inside phone */}
+        {showCreateModal && (
+          <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 300, display: "flex", alignItems: "flex-end" }}>
+            <div style={{ background: "#fff", borderRadius: "20px 20px 0 0", width: "100%", boxShadow: "0 -8px 40px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "85%" }}>
+              {/* Handle */}
+              <div style={{ padding: "12px 0 4px", display: "flex", justifyContent: "center" }}>
+                <div style={{ width: 40, height: 4, background: "#e2e8f0", borderRadius: 4 }} />
               </div>
-              <button onClick={() => setSelectedOrder(null)} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-            </div>
-
-            <div style={{ padding: 20 }}>
-              {/* Info */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                {[
-                  { label: "Customer", value: selectedOrder.customer },
-                  { label: "Clothes", value: `${selectedOrder.clothesType} ×${selectedOrder.quantity}` },
-                  { label: "Address", value: selectedOrder.address },
-                  { label: "Driver", value: selectedOrder.driver || "Not assigned" },
-                ].map(item => (
-                  <div key={item.label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>{item.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#334155", marginTop: 2 }}>{item.value}</div>
-                  </div>
-                ))}
+              <div style={{ padding: "0 20px 14px", borderBottom: "1px solid #f1f5f9" }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: "#0f172a" }}>New Order</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Fill in your details</div>
               </div>
-
-              {selectedOrder.notes && (
-                <div style={{ background: "#fef9c3", borderRadius: 10, padding: "10px 12px", marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, color: "#854d0e", fontWeight: 600 }}>NOTES</div>
-                  <div style={{ fontSize: 13, color: "#713f12" }}>{selectedOrder.notes}</div>
+              <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 5 }}>Clothes Type</label>
+                  <select value={newOrder.clothesType} onChange={e => setNewOrder(p => ({ ...p, clothesType: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 13, background: "#fff", color: "#0f172a", fontFamily: "'DM Sans', sans-serif" }}>
+                    {CLOTHES_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
                 </div>
-              )}
-
-              {/* Timeline */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 12 }}>Order Timeline</div>
-                <div style={{ position: "relative" }}>
-                  {selectedOrder.history.map((h, i) => {
-                    const st = STATUS_FLOW[h.status] || {};
-                    const isLast = i === selectedOrder.history.length - 1;
-                    return (
-                      <div key={i} style={{ display: "flex", gap: 12, marginBottom: isLast ? 0 : 16, position: "relative" }}>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                          <div style={{ width: 10, height: 10, borderRadius: "50%", background: isLast ? st.color || "#0ea5e9" : "#cbd5e1", flexShrink: 0, marginTop: 3 }} />
-                          {!isLast && <div style={{ width: 2, flex: 1, background: "#e2e8f0", marginTop: 2 }} />}
-                        </div>
-                        <div style={{ paddingBottom: isLast ? 0 : 4 }}>
-                          <div style={{ fontSize: 13, fontWeight: isLast ? 700 : 500, color: isLast ? st.color || "#0f172a" : "#475569" }}>{st.label || h.status}</div>
-                          <div style={{ fontSize: 11, color: "#94a3b8" }}>{h.time}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 5 }}>Quantity (pieces)</label>
+                  <input type="number" min={1} value={newOrder.quantity} onChange={e => setNewOrder(p => ({ ...p, quantity: parseInt(e.target.value) || 1 }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }} />
                 </div>
-              </div>
-
-              {/* Steps progress */}
-              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 12 }}>Progress</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {STEPS.filter((_, i) => i < 7).map((step, i) => {
-                    const curStep = STATUS_FLOW[selectedOrder.status]?.step || 1;
-                    const done = curStep > i + 1;
-                    const active = curStep === i + 1;
-                    return (
-                      <div key={step.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: done ? "#10b981" : active ? "#0ea5e9" : "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          {done ? <span style={{ color: "#fff", fontSize: 10 }}>✓</span> : <span style={{ width: 6, height: 6, borderRadius: "50%", background: active ? "#fff" : "#cbd5e1", display: "block" }} />}
-                        </div>
-                        <span style={{ fontSize: 12, color: done ? "#10b981" : active ? "#0ea5e9" : "#94a3b8", fontWeight: active ? 700 : 500 }}>{step.label}</span>
-                      </div>
-                    );
-                  })}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 5 }}>Pickup Address *</label>
+                  <input type="text" placeholder="e.g. Street 271, BKK1" value={newOrder.address} onChange={e => setNewOrder(p => ({ ...p, address: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 5 }}>Special Instructions</label>
+                  <textarea value={newOrder.notes} onChange={e => setNewOrder(p => ({ ...p, notes: e.target.value }))} rows={2} placeholder="e.g. No bleach..."
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "'DM Sans', sans-serif", resize: "none", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setShowCreateModal(false)}
+                    style={{ flex: 1, padding: "12px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", color: "#64748b" }}>
+                    Cancel
+                  </button>
+                  <button onClick={createOrder}
+                    style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: "0 4px 12px rgba(14,165,233,0.3)" }}>
+                    Place Order
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Create Order Modal */}
-      {showCreateModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ background: "#fff", borderRadius: 20, width: "100%", maxWidth: 480, boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f0f9ff, #f5f3ff)" }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>New Laundry Order</div>
-              <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>Fill in your order details</div>
-            </div>
-            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Clothes Type</label>
-                <select value={newOrder.clothesType} onChange={e => setNewOrder(p => ({ ...p, clothesType: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 14, background: "#fff", color: "#0f172a", fontFamily: "'DM Sans', sans-serif" }}>
-                  {CLOTHES_TYPES.map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Quantity (pieces)</label>
-                <input type="number" min={1} value={newOrder.quantity} onChange={e => setNewOrder(p => ({ ...p, quantity: parseInt(e.target.value) || 1 }))}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 14, fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }} />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Pickup Address *</label>
-                <input type="text" placeholder="e.g. Street 271, BKK1, Phnom Penh" value={newOrder.address} onChange={e => setNewOrder(p => ({ ...p, address: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 14, fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }} />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Special Instructions (optional)</label>
-                <textarea value={newOrder.notes} onChange={e => setNewOrder(p => ({ ...p, notes: e.target.value }))} rows={2} placeholder="e.g. Handle with care, no bleach..."
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 14, fontFamily: "'DM Sans', sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-              </div>
-            </div>
-            <div style={{ padding: "16px 24px", borderTop: "1px solid #f1f5f9", display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button onClick={() => setShowCreateModal(false)}
-                style={{ padding: "10px 20px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", color: "#64748b" }}>
-                Cancel
-              </button>
-              <button onClick={createOrder}
-                style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: "0 4px 12px rgba(14,165,233,0.3)" }}>
-                Place Order
-              </button>
-            </div>
+        {/* Toast */}
+        {toast && (
+          <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", background: toast.type === "error" ? "#fef2f2" : "#f0fdf4", border: `1px solid ${toast.type === "error" ? "#fca5a5" : "#86efac"}`, color: toast.type === "error" ? "#b91c1c" : "#15803d", borderRadius: 10, padding: "10px 16px", fontSize: 12, fontWeight: 600, boxShadow: "0 6px 20px rgba(0,0,0,0.1)", zIndex: 999, whiteSpace: "nowrap" }}>
+            {toast.type === "error" ? "❌" : "✅"} {toast.msg}
           </div>
-        </div>
-      )}
-
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: toast.type === "error" ? "#fef2f2" : "#f0fdf4", border: `1px solid ${toast.type === "error" ? "#fca5a5" : "#86efac"}`, color: toast.type === "error" ? "#b91c1c" : "#15803d", borderRadius: 12, padding: "12px 20px", fontSize: 14, fontWeight: 600, boxShadow: "0 8px 24px rgba(0,0,0,0.1)", zIndex: 999, whiteSpace: "nowrap" }}>
-          {toast.type === "error" ? "❌" : "✅"} {toast.msg}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -518,7 +514,7 @@ function ActionButtons({ order, role, handlers }) {
   const { status } = order;
   const btn = (label, onClick, color = "#0ea5e9", bg = "#e0f2fe") => (
     <button onClick={onClick}
-      style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: bg, color, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
+      style={{ padding: "6px 10px", borderRadius: 7, border: "none", background: bg, color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>
       {label}
     </button>
   );
@@ -530,29 +526,29 @@ function ActionButtons({ order, role, handlers }) {
       actions.push(btn("✅ Accept", () => handlers.shopAction(order.id, "accept"), "#10b981", "#d1fae5"));
       actions.push(btn("❌ Reject", () => handlers.shopAction(order.id, "reject"), "#ef4444", "#fee2e2"));
     }
-    if (status === "ACCEPTED") actions.push(btn("🚗 Assign Pickup Driver", () => handlers.assignPickupDriver(order.id), "#6366f1", "#ede9fe"));
+    if (status === "ACCEPTED") actions.push(btn("🚗 Assign Pickup", () => handlers.assignPickupDriver(order.id), "#6366f1", "#ede9fe"));
     if (status === "DELIVERED_TO_SHOP") actions.push(btn("🫧 Start Washing", () => handlers.shopStartWashing(order.id), "#06b6d4", "#cffafe"));
-    if (status === "WASHING") actions.push(btn("✅ Ready for Delivery", () => handlers.shopReadyForDelivery(order.id), "#10b981", "#d1fae5"));
-    if (status === "READY_FOR_DELIVERY") actions.push(btn("🚗 Assign Delivery Driver", () => handlers.assignDeliveryDriver(order.id), "#6366f1", "#ede9fe"));
+    if (status === "WASHING") actions.push(btn("✅ Ready", () => handlers.shopReadyForDelivery(order.id), "#10b981", "#d1fae5"));
+    if (status === "READY_FOR_DELIVERY") actions.push(btn("🚗 Assign Delivery", () => handlers.assignDeliveryDriver(order.id), "#6366f1", "#ede9fe"));
   }
 
   if (role === "driver") {
     if (status === "PICKUP_ASSIGNED") {
       actions.push(btn("✅ Accept Pickup", () => handlers.driverPickupAction(order.id, "accept"), "#10b981", "#d1fae5"));
-      actions.push(btn("❌ Reject Pickup", () => handlers.driverPickupAction(order.id, "reject"), "#ef4444", "#fee2e2"));
+      actions.push(btn("❌ Reject", () => handlers.driverPickupAction(order.id, "reject"), "#ef4444", "#fee2e2"));
     }
-    if (status === "OUT_FOR_PICKUP") actions.push(btn("📦 Mark Picked Up", () => handlers.driverPickedUp(order.id), "#0ea5e9", "#e0f2fe"));
-    if (status === "PICKED_UP") actions.push(btn("🏪 Delivered to Shop", () => handlers.driverDeliveredToShop(order.id), "#0284c7", "#e0f2fe"));
+    if (status === "OUT_FOR_PICKUP") actions.push(btn("📦 Picked Up", () => handlers.driverPickedUp(order.id), "#0ea5e9", "#e0f2fe"));
+    if (status === "PICKED_UP") actions.push(btn("🏪 At Shop", () => handlers.driverDeliveredToShop(order.id), "#0284c7", "#e0f2fe"));
     if (status === "DELIVERY_ASSIGNED") {
       actions.push(btn("✅ Accept Delivery", () => handlers.driverDeliveryAction(order.id, "accept"), "#10b981", "#d1fae5"));
-      actions.push(btn("❌ Reject Delivery", () => handlers.driverDeliveryAction(order.id, "reject"), "#ef4444", "#fee2e2"));
+      actions.push(btn("❌ Reject", () => handlers.driverDeliveryAction(order.id, "reject"), "#ef4444", "#fee2e2"));
     }
     if (status === "OUT_FOR_DELIVERY") {
-      actions.push(btn("📍 Arrived at Customer", () => handlers.driverArrivedAtCustomer(order.id), "#8b5cf6", "#ede9fe"));
-      actions.push(btn("✅ Mark Delivered", () => handlers.driverDelivered(order.id), "#10b981", "#d1fae5"));
+      actions.push(btn("📍 Arrived", () => handlers.driverArrivedAtCustomer(order.id), "#8b5cf6", "#ede9fe"));
+      actions.push(btn("✅ Delivered", () => handlers.driverDelivered(order.id), "#10b981", "#d1fae5"));
     }
   }
 
   if (actions.length === 0) return null;
-  return <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{actions}</div>;
+  return <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>{actions}</div>;
 }
