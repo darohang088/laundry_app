@@ -6,6 +6,6 @@ import LaundryApp from './laundry_app.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <LaundryApp />
   </StrictMode>,
 )
